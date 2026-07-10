@@ -1,0 +1,6 @@
+{
+  "name": "Ganaraj Ekota Sangha",
+  "description": "Complete Religious Organization Management System (CMS) for Ganaraj Ekota Sangha (গণরাজ একতা সংঘ) with member profiles, certificates, dynamic page builders, ID cards, and donation tracking.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
