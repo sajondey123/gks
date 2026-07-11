@@ -154,6 +154,47 @@ export default function App() {
             let updatedMembersList = [...loadedData.members].filter((m: any) => m && typeof m === 'object');
             let modified = false;
 
+            // Sync all 16 predefined members from INITIAL_MEMBERS
+            INITIAL_MEMBERS.forEach((defaultMember) => {
+              const existingIdx = updatedMembersList.findIndex((m: Member) => m.id === defaultMember.id);
+              if (existingIdx === -1) {
+                updatedMembersList.push({ ...defaultMember });
+                modified = true;
+              } else {
+                const existing = updatedMembersList[existingIdx];
+                let merged = false;
+                const fieldsToSync = [
+                  'banglaName', 'englishName', 'fatherName', 'dob', 'gender', 
+                  'bloodGroup', 'mobile', 'email', 'permanentAddress', 'presentAddress', 
+                  'occupation', 'photoUrl', 'membershipNumber'
+                ] as const;
+
+                const updated = { ...existing };
+                fieldsToSync.forEach(field => {
+                  if (defaultMember[field] !== undefined && existing[field] !== defaultMember[field]) {
+                    (updated as any)[field] = defaultMember[field];
+                    merged = true;
+                  }
+                });
+
+                if (merged) {
+                  updatedMembersList[existingIdx] = updated;
+                  modified = true;
+                }
+              }
+            });
+
+            // Sync committee term members list to ensure it always contains the full 16 members
+            if (loadedData.committeeTerm) {
+              if (!loadedData.committeeTerm.members || loadedData.committeeTerm.members.length < INITIAL_COMMITTEE_TERM.members.length) {
+                loadedData.committeeTerm = {
+                  ...loadedData.committeeTerm,
+                  members: INITIAL_COMMITTEE_TERM.members
+                };
+                modified = true;
+              }
+            }
+
             setCsrfToken(generateSecureToken());
 
             // Initialize Sajon Dey
@@ -171,13 +212,14 @@ export default function App() {
                 sajonUpdated.username = 'sajon_superadmin';
                 sajonMod = true;
               }
-              if (!sajon.passwordHash) {
-                const rawPass = 'Sajon#2026_Secure';
+              if (!sajon.passwordHash || (sajon as any).passwordVersion !== 'v3') {
+                const rawPass = 'Sajon@2026';
                 const salt = generateSecureToken();
                 sajonUpdated.salt = salt;
                 sajonUpdated.passwordHash = await sha256(rawPass + salt);
                 sajonUpdated.is2faEnabled = false; // Turn on robust 2FA for demonstration
                 sajonUpdated.twoFactorSecret = '';
+                (sajonUpdated as any).passwordVersion = 'v3';
                 setSajonTempPassword(rawPass);
                 sajonMod = true;
               }
@@ -202,12 +244,13 @@ export default function App() {
                 suvelUpdated.username = 'suvel_admin';
                 suvelMod = true;
               }
-              if (!suvel.passwordHash) {
-                const rawPass = 'Suvel#2026_Secure';
+              if (!suvel.passwordHash || (suvel as any).passwordVersion !== 'v3') {
+                const rawPass = 'Suvel@2026';
                 const salt = generateSecureToken();
                 suvelUpdated.salt = salt;
                 suvelUpdated.passwordHash = await sha256(rawPass + salt);
                 suvelUpdated.is2faEnabled = false;
+                (suvelUpdated as any).passwordVersion = 'v3';
                 setSuvelTempPassword(rawPass);
                 suvelMod = true;
               }
@@ -679,7 +722,7 @@ export default function App() {
     const match = members.find(m => m.email === email);
     if (match) {
       setLoginEmail(match.username || match.email);
-      setLoginPassword(email === 'sajondey123@gmail.com' ? 'Sajon#2026_Secure' : 'Suvel#2026_Secure');
+      setLoginPassword(email === 'sajondey123@gmail.com' ? 'Sajon@2026' : 'Suvel@2026');
       setLoginError(null);
       finalizeLogin(match);
     }
@@ -842,12 +885,12 @@ export default function App() {
                   <div>
                     <span className="font-bold">সুপার অ্যাডমিন:</span> sajon_superadmin (বা sajondey123@gmail.com)
                     <br />
-                    <span className="font-bold">পাসওয়ার্ড:</span> <code className="bg-amber-100 px-1 rounded">Sajon#2026_Secure</code>
+                    <span className="font-bold">পাসওয়ার্ড:</span> <code className="bg-amber-100 px-1 rounded">Sajon@2026</code>
                   </div>
                   <div>
                     <span className="font-bold">কমিটি অ্যাডমিন:</span> suvel_admin (বা suvel@gmail.com)
                     <br />
-                    <span className="font-bold">পাসওয়ার্ড:</span> <code className="bg-amber-100 px-1 rounded">Suvel#2026_Secure</code>
+                    <span className="font-bold">পাসওয়ার্ড:</span> <code className="bg-amber-100 px-1 rounded">Suvel@2026</code>
                   </div>
                 </div>
 
